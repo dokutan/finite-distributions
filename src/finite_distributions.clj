@@ -1,7 +1,7 @@
 ;; Finite probability distributions
 
 ;; by Konrad Hinsen
-;; last updated January 8, 2010
+;; last updated 2022-08-25
 
 ;; Copyright (c) Konrad Hinsen, 2009-2010. All rights reserved.  The use
 ;; and distribution terms for this software are covered by the Eclipse
@@ -16,10 +16,9 @@
      :doc "Finite probability distributions
            This library defines a monad for combining finite probability
            distributions."}
-  clojure.contrib.probabilities.finite-distributions
-  (:use [clojure.contrib.monads
-	 :only (defmonad domonad with-monad maybe-t m-lift m-chain)]
-	 [clojure.contrib.def :only (defvar)]))
+  finite-distributions
+  (:use [clojure.algo.monads
+         :only (defmonad domonad with-monad maybe-t m-lift m-chain)]))
 
 ; The probability distribution monad. It is limited to finite probability
 ; distributions (e.g. there is a finite number of possible value), which
@@ -43,9 +42,9 @@
 ; The function normalize takes this probability out of the distribution and
 ; re-distributes its weight over the valid values.
 
-(defvar cond-dist-m
-  (maybe-t dist-m)
-  "Variant of the dist monad that can handle undefined values.")
+(def cond-dist-m
+  "Variant of the dist monad that can handle undefined values."
+  (maybe-t dist-m))
 
 ; Normalization
 
@@ -56,10 +55,11 @@
 	(for [[val p] dist :when (> p 0)]
 	  [val (* p s)])))
 
-(defn normalize-cond [cdist]
+(defn normalize-cond
   "Normalize a probability distribution resulting from a computation in
    the cond-dist monad by re-distributing the weight of the invalid values
    over the valid ones."
+  [cdist]
   (let [missing (get cdist nil 0)
 	dist    (dissoc cdist nil)]
     (cond (zero? missing) dist
@@ -104,13 +104,13 @@
     (reduce add-choice {} (partition 2 choices))))
 
 (defn bernoulli
-  [p]
   "Returns the Bernoulli distribution for probability p."
+  [p]
   (choose p 1 :else 0))
 
 (defn- bc
-  [n]
   "Returns the binomial coefficients for a given n."
+  [n]
   (let [r (inc n)]
      (loop [c 1
 	    f (list 1)]
@@ -119,10 +119,10 @@
 	 (recur (inc c) (cons (* (/ (- r c) c) (first f)) f))))))
 
 (defn binomial
-  [n p]
   "Returns the binomial distribution, which is the distribution of the
    number of successes in a series of n experiments whose individual
    success probability is p."
+  [n p]
   (let [q (- 1 p)
 	n1 (inc n)
 	k (range n1)
@@ -149,13 +149,10 @@
   {v 1})
 
 (with-monad dist-m
-
   (defn join-with
     "Returns the distribution of (f x y) with x from dist1 and y from dist2."
     [f dist1 dist2]
-    ((m-lift 2 f) dist1 dist2))
-
-)
+    ((m-lift 2 f) dist1 dist2)))
 
 (with-monad cond-dist-m
   (defn cond-prob
@@ -170,9 +167,10 @@
 
 ; Select (with equal probability) N items from a sequence
 
-(defn- nth-and-rest [n xs]
+(defn- nth-and-rest
   "Return a list containing the n-th value of xs and the sequence
    obtained by removing the n-th value from xs."
+  [n xs]
   (let [[h t] (split-at n xs)]
     (list (first t) (concat h (rest t)))))
 
@@ -180,17 +178,16 @@
 
   (defn- select-n [n xs]
     (letfn [(select-1 [[s xs]]
-	      (uniform (for [i (range (count xs))]
-			 (let [[nth rest] (nth-and-rest i xs)]
-			   (list (cons nth s) rest)))))]
-      ((m-chain (replicate n select-1)) (list '() xs))))
+              (uniform (for [i (range (count xs))]
+                         (let [[nth rest] (nth-and-rest i xs)]
+                           (list (cons nth s) rest)))))]
+      ((m-chain (repeat n select-1)) (list '() xs))))
 
-  (defn select [n xs]
+  (defn select
     "Return the distribution for all possible ordered selections of n elements
      out of xs."
-    ((m-lift 1 first) (select-n n xs)))
-
-)
+    [n xs]
+    ((m-lift 1 first) (select-n n xs))))
 
 ; Find the probability that a given predicate is satisfied
 
