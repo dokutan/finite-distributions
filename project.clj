@@ -1,4 +1,4 @@
-(defproject finite-distributions "0.1.0-SNAPSHOT"
+(defproject org.clojars.dokutan/finite-distributions "0.1.0-SNAPSHOT"
   :description "An updated version of clojure.contrib.probabilities.finite-distributions"
   :url "https://github.com/dokutan/finite-distributions"
   :license {:name "EPL-1.0"
