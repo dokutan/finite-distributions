@@ -11,7 +11,7 @@ I consider this version to be stable.
 
 The library is available on [clojars](https://clojars.org/org.clojars.dokutan/finite-distributions). If you use Leiningen, add the following to your dependencies:
 ```
-[org.clojars.dokutan/finite-distributions "0.1.0-SNAPSHOT"]
+[org.clojars.dokutan/finite-distributions "1.0.0"]
 ```
 
 ## Documentation
